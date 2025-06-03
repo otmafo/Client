@@ -108,15 +108,20 @@ public class Client extends JFrame implements ActionListener {
 	}
 	
 	class CloseHandler extends WindowAdapter {
+		//窗口关闭时执行
 		public void windowClosing(final WindowEvent ev) {
 			try {
+				// 向服务器发送退出命令
 				out.println(Setting.COMMAND_LOGOUT);
+				// 刷新输出流
 				out.flush();
 				out.close();
 				socket.close();
 				System.exit(0);
 			} catch (IOException e) {
+				// 捕获异常并打印堆栈信息
 				e.printStackTrace();
+				// 退出程序
 				System.exit(0);
 			}
 		}
