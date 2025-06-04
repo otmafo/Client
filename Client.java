@@ -133,70 +133,75 @@ public class Client extends JFrame implements ActionListener {
     }
 	
 	public Client(String _user_name, String password, Socket _socket) throws IOException {
-        super("聊天室 - " + _user_name);
-		this.setLayout(null);
-		this.setBounds(200, 200, 500, 480);
-		this.setResizable(false);
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		this.addWindowListener(new CloseHandler());
-		
-		// 添加菜单栏
-        menuBar = new JMenuBar();
-        menuAccount = new JMenu("账户");
-        
-        menuUpdateProfile = new JMenuItem("修改资料");
-        menuUpdateProfile.addActionListener(this);
-        menuAccount.add(menuUpdateProfile);
-        
-        menuBar.add(menuAccount);
-        this.setJMenuBar(menuBar);
-
-		user_name = _user_name;
-		socket = _socket;
-		
-		text_history = new JTextPane();
-		text_history.setBounds(5, 5, 485, 290);
-		text_history.setEditable(false);
-		JScrollPane scroll_text_history = new JScrollPane(text_history);
-		scroll_text_history.setBounds(5, 5, 485, 290);
-		this.add(scroll_text_history);
-		docs_history = text_history.getDocument();
-		
-		text_in = new JTextArea();
-		text_in.setBounds(5, 305, 485, 110);
-		text_in.setLineWrap(true);
-		text_in.setEnabled(false);
-		JScrollPane scroll_text_in = new JScrollPane(text_in);
-		scroll_text_in.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		scroll_text_in.setBounds(5, 305, 485, 110);
-		this.add(scroll_text_in);
-		
-		btn_send = new JButton("发送(alt+回车)");
-		btn_send.setBounds(370, 420, 120, 25);
-		btn_send.addActionListener(this);
-		btn_send.setEnabled(false);
-		btn_send.setMnemonic(KeyEvent.VK_ENTER);
-		this.add(btn_send);
-		
-		label_destuser = new JLabel("发送给:");
-		label_destuser.setBounds(215, 420, 50, 25);
-		this.add(label_destuser);
-		
-		cbbox_destuser = new JComboBox<String>();
-		cbbox_destuser.setBounds(265, 420, 100, 25);
-		this.add(cbbox_destuser);
-		
-		StyleConstants.setForeground(attrset_cmd, Color.BLUE);
-		StyleConstants.setBold(attrset_cmd, true);
-		
-		StyleConstants.setForeground(attrset_msg, Color.BLACK);
-		
-		this.setVisible(true);
-		// 发送登录信息（包含密码）
-        out = new PrintWriter(new BufferedWriter(
-            new OutputStreamWriter(socket.getOutputStream())),true);
-        new ListenService(user_name, password, socket).start();
-	}
+    super("聊天室 - " + _user_name);
+    this.setLayout(null);
+    this.setBounds(200, 200, 500, 480);
+    this.setResizable(false);
+    this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    this.addWindowListener(new CloseHandler());
+    
+    user_name = _user_name;
+    socket = _socket;
+    
+    // 1. 创建消息历史区域
+    text_history = new JTextPane();
+    text_history.setBounds(5, 5, 485, 290);
+    text_history.setEditable(false);
+    JScrollPane scroll_text_history = new JScrollPane(text_history);
+    scroll_text_history.setBounds(5, 5, 485, 290);
+    this.add(scroll_text_history);
+    docs_history = text_history.getDocument();
+    
+    // 2. 创建输入区域
+    text_in = new JTextArea();
+    text_in.setBounds(5, 305, 485, 110);
+    text_in.setLineWrap(true);
+    text_in.setEnabled(false);
+    JScrollPane scroll_text_in = new JScrollPane(text_in);
+    scroll_text_in.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+    scroll_text_in.setBounds(5, 305, 485, 110);
+    this.add(scroll_text_in);
+    
+    // 3. 创建发送按钮
+    btn_send = new JButton("发送(alt+回车)");
+    btn_send.setBounds(370, 420, 120, 25);
+    btn_send.addActionListener(this);
+    btn_send.setEnabled(false);
+    btn_send.setMnemonic(KeyEvent.VK_ENTER);
+    this.add(btn_send);
+    
+    // 4. 创建目标用户标签
+    label_destuser = new JLabel("发送给:");
+    label_destuser.setBounds(215, 420, 50, 25);
+    this.add(label_destuser);
+    
+    // 5. 创建用户选择框
+    cbbox_destuser = new JComboBox<>();
+    cbbox_destuser.setBounds(265, 420, 100, 25);
+    this.add(cbbox_destuser);
+    
+    // 6. 设置文本样式
+    StyleConstants.setForeground(attrset_cmd, Color.BLUE);
+    StyleConstants.setBold(attrset_cmd, true);
+    StyleConstants.setForeground(attrset_msg, Color.BLACK);
+    
+    // 7. 创建菜单栏
+    menuBar = new JMenuBar();
+    menuAccount = new JMenu("账户");
+    menuUpdateProfile = new JMenuItem("修改资料");
+    menuUpdateProfile.addActionListener(this);
+    menuAccount.add(menuUpdateProfile);
+    menuBar.add(menuAccount);
+    this.setJMenuBar(menuBar);
+    
+    // 8. 设置可见性
+    this.setVisible(true);
+    
+    // 9. 初始化输出流和监听服务
+    out = new PrintWriter(new BufferedWriter(
+        new OutputStreamWriter(socket.getOutputStream())), true);
+    new ListenService(user_name, password, socket).start();
+}
 	
 	class CloseHandler extends WindowAdapter {
 		//窗口关闭时执行
