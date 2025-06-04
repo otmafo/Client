@@ -192,8 +192,6 @@ public class Client extends JFrame implements ActionListener {
 		StyleConstants.setForeground(attrset_msg, Color.BLACK);
 		
 		this.setVisible(true);
-		out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),true);
-		new ListenService(user_name, socket).start();
 		// 发送登录信息（包含密码）
         out = new PrintWriter(new BufferedWriter(
             new OutputStreamWriter(socket.getOutputStream())),true);
