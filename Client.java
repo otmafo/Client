@@ -301,13 +301,13 @@ public class Client extends JFrame implements ActionListener {
 		public ListenService(String _user_name, String _password, Socket _socket) {
 			try {
 				user_name = _user_name;
+				password = _password;
 				socket = _socket;
 				in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),true);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			password = _password;
 		}
 		
 		public void run() {
