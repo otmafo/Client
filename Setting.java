@@ -12,10 +12,4 @@ public class Setting {
     public static String COMMAND_REGISTER = "register";
     public static String COMMAND_CHANGE_NICKNAME = "change_nickname";
     public static String COMMAND_CHANGE_PASSWORD = "change_password";
-
-    // 数据库连接信息
-    public static String DB_URL = "jdbc:mysql://localhost:3306/mychet";
-    public static String DB_USER = "0tmafo";
-    public static String DB_PASSWORD = "20041217Xat";
-    public static String ADMIN_EMAIL = "xieaoting@qq.com";
 }

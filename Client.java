@@ -38,7 +38,7 @@ public class Client extends JFrame implements ActionListener {
 
     public static void main(String args[]) {
         try {
-            String name = JOptionPane.showInputDialog("请输入用户名：", "user1");
+            String name = JOptionPane.showInputDialog("请输入用户名：");
             if (name == null || name.length() == 0)
                 return;
             JPasswordField passwordField = new JPasswordField();
@@ -92,18 +92,18 @@ public class Client extends JFrame implements ActionListener {
         this.add(scroll_text_in);
 
         btn_send = new JButton("发送(alt+回车)");
-        btn_send.setBounds(370, 365, 120, 25);
+        btn_send.setBounds(370, 370, 120, 25);
         btn_send.addActionListener(this);
         btn_send.setEnabled(false);
         btn_send.setMnemonic(KeyEvent.VK_ENTER);
         this.add(btn_send);
 
         label_destuser = new JLabel("发送给:");
-        label_destuser.setBounds(215, 365, 50, 25);
+        label_destuser.setBounds(215, 370, 50, 25);
         this.add(label_destuser);
 
         cbbox_destuser = new JComboBox<String>();
-        cbbox_destuser.setBounds(265, 365, 100, 25);
+        cbbox_destuser.setBounds(265, 370, 100, 25);
         this.add(cbbox_destuser);
 
         StyleConstants.setForeground(attrset_cmd, Color.BLUE);
