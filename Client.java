@@ -100,6 +100,9 @@ public class Client extends JFrame implements ActionListener {
         StyleConstants.setBold(attrset_cmd, true);
 
         StyleConstants.setForeground(attrset_msg, Color.BLACK);
+        System.out.println("Text input enabled: " + text_in.isEnabled());
+        System.out.println("Send button enabled: " + btn_send.isEnabled());
+        System.out.println("Destination user combo box visible: " + cbbox_destuser.isVisible());
 
         this.setVisible(true);
         out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
@@ -184,6 +187,7 @@ public class Client extends JFrame implements ActionListener {
 
                 while (true) {
                     if ((command = in.readLine()) != null) {
+                        System.out.println("Received command: " + command); // 添加日志输出
                         if (command.equals(Setting.COMMAND_MSG)) {
                             String user_src = in.readLine();
                             String msg = in.readLine().replaceAll("\\\\n", "\n");
@@ -204,9 +208,15 @@ public class Client extends JFrame implements ActionListener {
                         } else if (command.equals(Setting.COMMAND_LOGIN_SUC)) {
                             String user_login = in.readLine();
                             insertText("[" + user_login + "] 进入了聊天室. (" + getTime() + ")\n", attrset_cmd);
-                            text_in.setEnabled(true);
-                            btn_send.setEnabled(true);
-
+                            SwingUtilities.invokeLater(() -> {
+                                text_in.setEnabled(true);
+                                btn_send.setEnabled(true);
+                                System.out.println("Text input enabled after login: " + text_in.isEnabled());
+                                System.out.println("Send button enabled after login: " + btn_send.isEnabled());
+                                revalidate(); // 重新验证布局
+                                repaint();    // 重绘界面
+                            });
+                            
                             // 显示更改昵称和密码的选项
                             JMenuItem changeNicknameItem = new JMenuItem("更改昵称");
                             changeNicknameItem.addActionListener(e -> {
