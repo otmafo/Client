@@ -41,9 +41,19 @@ public class Client extends JFrame implements ActionListener {
             String name = JOptionPane.showInputDialog("请输入用户名：", "user1");
             if (name == null || name.length() == 0)
                 return;
-            String password = JOptionPane.showInputDialog("请输入密码：");
-            if (password == null || password.length() == 0)
-                return;
+            JPasswordField passwordField = new JPasswordField();
+            int option = JOptionPane.showConfirmDialog(
+                null, 
+                passwordField, 
+                "请输入密码：", 
+                JOptionPane.OK_CANCEL_OPTION
+            );
+        
+            String password = null;
+            if (option == JOptionPane.OK_OPTION) {
+                password = new String(passwordField.getPassword());
+            }
+            if (password == null || password.isEmpty()) return;
 
             Socket socket = new Socket(Setting.SERVER_IP, Setting.SERVER_PORT);
             new Client(name, password, socket);
@@ -68,32 +78,32 @@ public class Client extends JFrame implements ActionListener {
         text_history.setBounds(5, 5, 485, 290);
         text_history.setEditable(false);
         JScrollPane scroll_text_history = new JScrollPane(text_history);
-        scroll_text_history.setBounds(5, 5, 485, 290);
+        scroll_text_history.setBounds(5, 5, 485, 250);
         this.add(scroll_text_history);
         docs_history = text_history.getDocument();
 
         text_in = new JTextArea();
-        text_in.setBounds(5, 305, 485, 110);
+        text_in.setBounds(5, 280, 485, 110);
         text_in.setLineWrap(true);
         text_in.setEnabled(false);
         JScrollPane scroll_text_in = new JScrollPane(text_in);
         scroll_text_in.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scroll_text_in.setBounds(5, 305, 485, 110);
+        scroll_text_in.setBounds(5, 260, 485, 110);
         this.add(scroll_text_in);
 
         btn_send = new JButton("发送(alt+回车)");
-        btn_send.setBounds(370, 420, 120, 25);
+        btn_send.setBounds(370, 365, 120, 25);
         btn_send.addActionListener(this);
         btn_send.setEnabled(false);
         btn_send.setMnemonic(KeyEvent.VK_ENTER);
         this.add(btn_send);
 
         label_destuser = new JLabel("发送给:");
-        label_destuser.setBounds(215, 420, 50, 25);
+        label_destuser.setBounds(215, 365, 50, 25);
         this.add(label_destuser);
 
         cbbox_destuser = new JComboBox<String>();
-        cbbox_destuser.setBounds(265, 420, 100, 25);
+        cbbox_destuser.setBounds(265, 365, 100, 25);
         this.add(cbbox_destuser);
 
         StyleConstants.setForeground(attrset_cmd, Color.BLUE);
@@ -208,9 +218,13 @@ public class Client extends JFrame implements ActionListener {
                         } else if (command.equals(Setting.COMMAND_LOGIN_SUC)) {
                             String user_login = in.readLine();
                             insertText("[" + user_login + "] 进入了聊天室. (" + getTime() + ")\n", attrset_cmd);
+                            revalidate(); // 重新验证布局
+                            repaint(); 
                             SwingUtilities.invokeLater(() -> {
                                 text_in.setEnabled(true);
                                 btn_send.setEnabled(true);
+                                label_destuser.setVisible(true);
+                                cbbox_destuser.setVisible(true);
                                 System.out.println("Text input enabled after login: " + text_in.isEnabled());
                                 System.out.println("Send button enabled after login: " + btn_send.isEnabled());
                                 revalidate(); // 重新验证布局
