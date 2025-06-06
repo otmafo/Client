@@ -12,4 +12,8 @@ public class Setting {
     public static String COMMAND_REGISTER = "register";
     public static String COMMAND_CHANGE_NICKNAME = "change_nickname";
     public static String COMMAND_CHANGE_PASSWORD = "change_password";
+    public static String COMMAND_GET_NICKNAME = "get_nickname";
+    public static String COMMAND_NICKNAME = "nickname"; 
+    public static String COMMAND_NICKNAME_UPDATED = "nickname_updated"; 
+    public static final String COMMAND_END_OF_LIST = "END_OF_LIST";
 }

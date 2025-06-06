@@ -15,6 +15,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -35,6 +37,7 @@ public class Client extends JFrame implements ActionListener {
     SimpleAttributeSet attrset_cmd = new SimpleAttributeSet();
     SimpleAttributeSet attrset_msg = new SimpleAttributeSet();
     PrintWriter out = null;
+    private Map<String, String> nicknameMap = new HashMap<>(); // 用户名->昵称映射
 
     public static void main(String args[]) {
         try {
@@ -110,9 +113,6 @@ public class Client extends JFrame implements ActionListener {
         StyleConstants.setBold(attrset_cmd, true);
 
         StyleConstants.setForeground(attrset_msg, Color.BLACK);
-        System.out.println("Text input enabled: " + text_in.isEnabled());
-        System.out.println("Send button enabled: " + btn_send.isEnabled());
-        System.out.println("Destination user combo box visible: " + cbbox_destuser.isVisible());
 
         this.setVisible(true);
         out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
@@ -141,8 +141,10 @@ public class Client extends JFrame implements ActionListener {
             if (dest_user == null)
                 return;
 
+            String destNickname = nicknameMap.getOrDefault(dest_user, dest_user);
             String msg = text_in.getText();
-            insertText("[我] 对 [" + dest_user + "] 说: (" + getTime() + ")\n", attrset_cmd);
+            
+            insertText("[我] 对 [" + destNickname + "] 说: (" + getTime() + ")\n", attrset_cmd);
             insertText(msg + "\n", attrset_msg);
 
             out.println(Setting.COMMAND_SENDMSG);
@@ -197,72 +199,88 @@ public class Client extends JFrame implements ActionListener {
 
                 while (true) {
                     if ((command = in.readLine()) != null) {
-                        System.out.println("Received command: " + command); // 添加日志输出
+                        System.out.println("Received command: " + command);
                         if (command.equals(Setting.COMMAND_MSG)) {
                             String user_src = in.readLine();
+                            String srcNickname = in.readLine(); // 发送者昵称
                             String msg = in.readLine().replaceAll("\\\\n", "\n");
                             if (!user_src.equals(user_name)) {
-                                insertText("[" + user_src + "] 对 [我] 说: (" + getTime() + ")\n", attrset_cmd);
+                                insertText("[" + srcNickname + "] 对 [我] 说: (" + getTime() + ")\n", attrset_cmd);
                                 insertText(msg + "\n", attrset_msg);
                             }
                         } else if (command.equals(Setting.COMMAND_USERLIST)) {
                             String user_list = in.readLine();
-                            String user[] = user_list.split("\\|");
+                            String userPairs[] = user_list.split("\\|");
                             cbbox_destuser.removeAllItems();
+                            nicknameMap.clear();
 
                             cbbox_destuser.addItem("所有人");
-                            for (int i = 0; i < user.length; i++) {
-                                if (!user[i].equals(user_name))
-                                    cbbox_destuser.addItem(user[i]);
+                            for (String pair : userPairs) {
+                                if (pair.isEmpty()) continue;
+                                String[] parts = pair.split(":", 2);
+                                if (parts.length == 2) {
+                                    String username = parts[0];
+                                    String nickname = parts[1];
+                                    nicknameMap.put(username, nickname);
+                                    if (!username.equals(user_name)) {
+                                        cbbox_destuser.addItem(username);
+                                    }
+                                }
                             }
                         } else if (command.equals(Setting.COMMAND_LOGIN_SUC)) {
                             String user_login = in.readLine();
-                            insertText("[" + user_login + "] 进入了聊天室. (" + getTime() + ")\n", attrset_cmd);
-                            revalidate(); // 重新验证布局
-                            repaint(); 
-                            SwingUtilities.invokeLater(() -> {
-                                text_in.setEnabled(true);
-                                btn_send.setEnabled(true);
-                                label_destuser.setVisible(true);
-                                cbbox_destuser.setVisible(true);
-                                System.out.println("Text input enabled after login: " + text_in.isEnabled());
-                                System.out.println("Send button enabled after login: " + btn_send.isEnabled());
-                                revalidate(); // 重新验证布局
-                                repaint();    // 重绘界面
-                            });
+                            String nickname = in.readLine(); // 新昵称
+                            nicknameMap.put(user_login, nickname);
                             
-                            // 显示更改昵称和密码的选项
-                            JMenuItem changeNicknameItem = new JMenuItem("更改昵称");
-                            changeNicknameItem.addActionListener(e -> {
-                                String newNickname = JOptionPane.showInputDialog("请输入新的昵称：");
-                                if (newNickname != null && !newNickname.isEmpty()) {
-                                    out.println(Setting.COMMAND_CHANGE_NICKNAME);
-                                    out.println(newNickname);
-                                    out.flush();
-                                }
-                            });
+                            if (user_login.equals(user_name)) {
+                                // 自己登录成功
+                                SwingUtilities.invokeLater(() -> {
+                                    text_in.setEnabled(true);
+                                    btn_send.setEnabled(true);
+                                    label_destuser.setVisible(true);
+                                    cbbox_destuser.setVisible(true);
+                                    System.out.println("Text input enabled after login: " + text_in.isEnabled());
+                                    System.out.println("Send button enabled after login: " + btn_send.isEnabled());
+                                    revalidate();
+                                    repaint();
+                                });
+                                
+                                // 添加设置菜单
+                                JMenuItem changeNicknameItem = new JMenuItem("更改昵称");
+                                changeNicknameItem.addActionListener(e -> {
+                                    String newNickname = JOptionPane.showInputDialog("请输入新的昵称：");
+                                    if (newNickname != null && !newNickname.isEmpty()) {
+                                        out.println(Setting.COMMAND_CHANGE_NICKNAME);
+                                        out.println(newNickname);
+                                        out.flush();
+                                    }
+                                });
 
-                            JMenuItem changePasswordItem = new JMenuItem("更改密码");
-                            changePasswordItem.addActionListener(e -> {
-                                String newPassword = JOptionPane.showInputDialog("请输入新的密码：");
-                                if (newPassword != null && !newPassword.isEmpty()) {
-                                    out.println(Setting.COMMAND_CHANGE_PASSWORD);
-                                    out.println(hashPassword(newPassword));
-                                    out.flush();
-                                }
-                            });
+                                JMenuItem changePasswordItem = new JMenuItem("更改密码");
+                                changePasswordItem.addActionListener(e -> {
+                                    String newPassword = JOptionPane.showInputDialog("请输入新的密码：");
+                                    if (newPassword != null && !newPassword.isEmpty()) {
+                                        out.println(Setting.COMMAND_CHANGE_PASSWORD);
+                                        out.println(hashPassword(newPassword));
+                                        out.flush();
+                                    }
+                                });
 
-                            JMenuBar menuBar = new JMenuBar();
-                            JMenu settingsMenu = new JMenu("设置");
-                            settingsMenu.add(changeNicknameItem);
-                            settingsMenu.add(changePasswordItem);
-                            menuBar.add(settingsMenu);
-                            setJMenuBar(menuBar);
+                                JMenuBar menuBar = new JMenuBar();
+                                JMenu settingsMenu = new JMenu("设置");
+                                settingsMenu.add(changeNicknameItem);
+                                settingsMenu.add(changePasswordItem);
+                                menuBar.add(settingsMenu);
+                                setJMenuBar(menuBar);
+                            } else {
+                                insertText("[" + nickname + "] 进入了聊天室. (" + getTime() + ")\n", attrset_cmd);
+                            }
                         } else if (command.equals(Setting.COMMAND_LOGIN_FAILED)) {
                             insertText(user_name + " 登陆失败\n", attrset_cmd);
                         } else if (command.equals(Setting.COMMAND_LOGOUT)) {
                             String user_logout = in.readLine();
-                            insertText("[" + user_logout + "] 退出了聊天室. (" + getTime() + ")\n", attrset_cmd);
+                            String nickname = in.readLine(); // 退出用户昵称
+                            insertText("[" + nickname + "] 退出了聊天室. (" + getTime() + ")\n", attrset_cmd);
                         } else if (command.equals(Setting.COMMAND_REGISTER)) {
                             String email = JOptionPane.showInputDialog("请输入邮箱：");
                             if (email != null && !email.isEmpty()) {
@@ -271,6 +289,11 @@ public class Client extends JFrame implements ActionListener {
                                 out.println(email);
                                 out.flush();
                             }
+                        } else if (command.equals(Setting.COMMAND_NICKNAME_UPDATED)) {
+                            String updatedUser = in.readLine();
+                            String newNickname = in.readLine();
+                            nicknameMap.put(updatedUser, newNickname);
+                            insertText("用户 [" + updatedUser + "] 的昵称已更新为: " + newNickname + " (" + getTime() + ")\n", attrset_cmd);
                         }
                     }
                 }
