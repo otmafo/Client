@@ -40,29 +40,7 @@ public class Client extends JFrame implements ActionListener {
     private Map<String, String> nicknameMap = new HashMap<>(); // 用户名->昵称映射
 
     public static void main(String args[]) {
-        try {
-            String name = JOptionPane.showInputDialog("请输入用户名：");
-            if (name == null || name.length() == 0)
-                return;
-            JPasswordField passwordField = new JPasswordField();
-            int option = JOptionPane.showConfirmDialog(
-                null, 
-                passwordField, 
-                "请输入密码：", 
-                JOptionPane.OK_CANCEL_OPTION
-            );
-        
-            String password = null;
-            if (option == JOptionPane.OK_OPTION) {
-                password = new String(passwordField.getPassword());
-            }
-            if (password == null || password.isEmpty()) return;
-
-            Socket socket = new Socket(Setting.SERVER_IP, Setting.SERVER_PORT);
-            new Client(name, password, socket);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        new LoginOrRegisterFrame();
     }
 
     public Client(String _user_name, String _password, Socket _socket) throws IOException {
@@ -316,6 +294,87 @@ public class Client extends JFrame implements ActionListener {
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
                 return null;
+            }
+        }
+    }
+}
+
+class LoginOrRegisterFrame extends JFrame implements ActionListener {
+    private JTextField tfUsername;
+    private JPasswordField pfPassword;
+    private JButton btnLogin;
+    private JButton btnRegister;
+
+    public LoginOrRegisterFrame() {
+        setTitle("登录/注册");
+        setSize(350, 200);
+        setLayout(new GridLayout(4, 2, 10, 10));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // 用户名输入
+        add(new JLabel("用户名:"));
+        tfUsername = new JTextField();
+        add(tfUsername);
+
+        // 密码输入
+        add(new JLabel("密码:"));
+        pfPassword = new JPasswordField();
+        add(pfPassword);
+
+        // 登录按钮
+        btnLogin = new JButton("登录");
+        btnLogin.addActionListener(this);
+        add(btnLogin);
+
+        // 注册按钮
+        btnRegister = new JButton("注册");
+        btnRegister.addActionListener(this);
+        add(btnRegister);
+
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String username = tfUsername.getText().trim();
+        String password = new String(pfPassword.getPassword());
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "用户名和密码不能为空");
+            return;
+        }
+
+        if (e.getSource() == btnLogin) {
+            // 登录逻辑
+            try {
+                Socket socket = new Socket(Setting.SERVER_IP, Setting.SERVER_PORT);
+                new Client(username, password, socket);
+                dispose(); // 关闭登录窗口
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "连接服务器失败: " + ex.getMessage());
+            }
+        } else if (e.getSource() == btnRegister) {
+            // 注册逻辑
+            String email = JOptionPane.showInputDialog(this, "请输入邮箱地址:");
+            if (email != null && !email.isEmpty()) {
+                try {
+                    // 连接到服务器发送注册请求
+                    Socket socket = new Socket(Setting.SERVER_IP, Setting.SERVER_PORT);
+                    PrintWriter out = new PrintWriter(
+                        new BufferedWriter(
+                            new OutputStreamWriter(socket.getOutputStream())), true);
+                    
+                    out.println(Setting.COMMAND_REGISTER);
+                    out.println(username);
+                    out.println(email);
+                    out.flush();
+                    
+                    JOptionPane.showMessageDialog(this, "注册请求已发送，请等待管理员处理");
+                    socket.close();
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "发送注册请求失败: " + ex.getMessage());
+                }
             }
         }
     }
